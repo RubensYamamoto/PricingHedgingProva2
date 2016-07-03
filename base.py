@@ -158,6 +158,7 @@ def fillPartialDf(phi, position, tenor, startDate):
     premium_array = np.empty(size);
     delta_array = np.empty(size);
     cdiOver_array = np.empty(size);
+    ptax_array = np.empty(size);
     
     #loop dataframes row by row from start date to maturity
     idx=0
@@ -191,12 +192,15 @@ def fillPartialDf(phi, position, tenor, startDate):
         premium_array[idx]=premium
         delta_array[idx]=delta
         # calculate CDI overnight
-        cdiOver_array[idx]=(1 + (cdi_df['PX_LAST'][i])/100)**(1/252)    
+        cdiOver_array[idx]=(1 + (cdi_df['PX_LAST'][i])/100)**(1/252)
+        ptax_array[idx]=ptax_df['PX_ASK'][i]
         idx = idx + 1
     
-    resultMatrix=np.array([[referenceDate_array[j].date(), ttm_array[j], discountFactor_array[j], fwdAtMaturity_array[j], volAtMaturity_array[j], premium_array[j], delta_array[j], cdiOver_array[j]] for j in range(size)])
+    resultMatrix=np.array([[referenceDate_array[j].date(), ttm_array[j], discountFactor_array[j], \
+    fwdAtMaturity_array[j], volAtMaturity_array[j], premium_array[j], delta_array[j], \
+    cdiOver_array[j], ptax_array[j]] for j in range(size)])
 
-    dfResult = pd.DataFrame(resultMatrix,columns=['date','ttm','df','fwd','vol','premium','delta','cdiOver'])
+    dfResult = pd.DataFrame(resultMatrix,columns=['date','ttm','df','fwd','vol','premium','delta','cdiOver', 'ptax'])
     return dfResult
 
 # Calculate portfolio by date
