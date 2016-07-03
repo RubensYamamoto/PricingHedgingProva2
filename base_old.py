@@ -134,6 +134,7 @@ def fillPartialDf(phi, position, tenor, startDate):
     startIndex = referenceDates_df.loc[referenceDates_df['Date'] == startDate].index[0]
     maturityDate = startDate + relativedelta(months=tenor)
 
+    #check if maturity date is greater than the last Bloomberg date available
     lastRow=len(referenceDates_df['Date'])
     if (maturityDate > referenceDates_df['Date'][lastRow-1]):
         maturityDate = referenceDates_df['Date'][lastRow-1]
@@ -226,36 +227,4 @@ def calcPortfolio(phi, position, tenor, startDate, includeHedge):
     
     # portfolio
     df['portf']=df['premium']+df['cfwtotal']
-    return pd.Series(df['portf'].values, index=df['date'].values)
-
-# Calculate portfolio by date, rebalancing weekly
-def calcPortfolioRebalancingWeekly(phi, position, tenor, startDate):
-    #save weekday in order to rebalance only on this weekday
-    weekday=startDate.weekday()
-    df=fillPartialDf(phi, position, tenor, startDate)
-    nstp=len(df.index)-1
-    # calculate cashflows
-    lastFWD=df['fwd'][0]
-    lastDelta=df['delta'][0]
-    df['cfwprem']=0
-    df.loc[0,'cfwprem']=-df['premium'][0]
-    for j in range(1,nstp+1):
-        df.loc[j:,'cfwprem']=df['cfwprem'][j-1]*df['cdiOver'][j-1]
-        if (df['date'][j].weekday()==weekday):
-            df.loc[j:,'cfwprem']=df['cfwprem'][j]+(df['fwd'][j]-lastFWD)*lastDelta
-            lastFWD=df['fwd'][j]
-            lastDelta=df['delta'][j]
-    
-    # calculate portfolios
-    lastFWD=df['fwd'][0]
-    lastDelta=df['delta'][0]
-    df['portf']=0
-    for j in range(1,nstp+1):
-        df.loc[j:,'portf']=df['premium'][j]+df['cfwprem'][j]
-        if (df['date'][j].weekday()==weekday):
-            lastFWD=df['fwd'][j]
-            lastDelta=df['delta'][j]
-        else:
-            df.loc[j:,'portf']=df['portf'][j]+(df['fwd'][j]-lastFWD)*lastDelta
-
     return pd.Series(df['portf'].values, index=df['date'].values)
